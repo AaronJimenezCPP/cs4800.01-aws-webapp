@@ -1,25 +1,35 @@
-import logo from './logo.svg';
-import './App.css';
+import { AppBar, Grid, SvgIcon, Toolbar, Typography } from '@mui/material';
+import { Container } from '@mui/system';
+import { ReactComponent as FlameIcon } from "./flame-icon.svg"
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <>
+            <TopBar />
+
+            <Typography>
+                Hello
+            </Typography>
+        </>
+    );
+}
+
+const TopBar = () => {
+    return (
+        <AppBar position='sticky'>
+            <Toolbar>
+                <Grid container>
+                    <SvgIcon sx={{width: "2rem", height: "2rem", marginRight: "1rem"}}>
+                        <FlameIcon />
+                    </SvgIcon>
+
+                    <Typography sx={{color: "white", weight: 500, fontSize: "1.4rem", textShadow: "2px 2px rgba(0,0,0,0.2)"}}>
+                        California Wildfire Predictions
+                    </Typography>
+                </Grid>
+            </Toolbar>
+        </AppBar>
+    )
 }
 
 export default App;
