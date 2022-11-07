@@ -1,15 +1,37 @@
 import { AppBar, Grid, SvgIcon, Toolbar, Typography } from '@mui/material';
-import { Container } from '@mui/system';
+import { Box } from '@mui/system';
 import { ReactComponent as FlameIcon } from "./flame-icon.svg"
+import calitmp from "./cali-tmp.png"
+import { useTheme } from '@emotion/react';
 
 function App() {
+    const theme = useTheme();
+
     return (
         <>
             <TopBar />
 
-            <Typography>
-                Hello
-            </Typography>
+            <Box sx={{margin: "2rem"}}>
+                <Grid container>
+                    <Grid item lg={4}>
+                        <Box 
+                            component="img"
+                            alt="California WIP"
+                            src={calitmp}
+                            sx={{
+                                backgroundColor: "rgb(240,240,240)",
+                                width: "100%",
+                                padding: "2rem",
+                                borderRadius: "0.5rem",
+                                borderStyle: "solid",
+                                borderColor: "rgb(100,100,100)",
+                                borderWidth: "1px",
+                                boxShadow: theme.shadows[4]
+                            }}
+                        />
+                    </Grid>
+                </Grid>
+            </Box>
         </>
     );
 }
