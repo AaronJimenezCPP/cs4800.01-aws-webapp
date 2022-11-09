@@ -1,8 +1,8 @@
 import { AppBar, Button, Divider, Grid, Paper, SvgIcon, TextField, Toolbar, Typography } from '@mui/material';
 import { Box, Container } from '@mui/system';
 import { ReactComponent as FlameIcon } from "./flame-icon.svg"
-import calitmp from "./cali-tmp.png"
 import { useTheme } from '@emotion/react';
+import { GoogleMap } from '@react-google-maps/api';
 
 function App() {
     
@@ -45,24 +45,14 @@ const TopBar = () => {
 }
 
 const California = () => {
-    const theme = useTheme();
-
     return (
-        <Box 
-            component="img"
-            alt="California WIP"
-            src={calitmp}
-            sx={{
-                backgroundColor: "rgb(240,240,240)",
-                width: "calc(100% - 4rem)",
-                padding: "2rem",
-                borderRadius: "0.5rem",
-                borderStyle: "solid",
-                borderColor: "rgb(100,100,100)",
-                borderWidth: "1px",
-                boxShadow: theme.shadows[4]
-            }}
-        />
+        <GoogleMap 
+            mapContainerStyle={{width: "100%", height: "40rem"}}
+            center={{lat: 36.778259, lng: -119.417931}}
+            zoom={6}
+        >  
+            <></>
+        </GoogleMap>
     )
 }
 
@@ -145,35 +135,6 @@ const PredictionInput = () => {
                 </Box>
             </Paper>
         </Container> 
-    )
-
-    return (
-        <Box sx={{width: "100%"}}>
-            <Container>
-                <Box 
-                    sx={{
-                        width: "100%",
-                        borderRadius: "0.5rem",
-                        borderStyle: "solid",
-                        borderColor: "rgba(25,200,75,0.3)",
-                        borderWidth: "1px",
-                        backgroundColor: "rgba(25,200,75, 0)",
-                        boxShadow: theme.shadows[3]
-                    }}
-                >
-                    <Typography textAlign="center" sx={{fontSize: "1.4rem", fontWeight: 500, textShadow: "2px 2px rgba(0,0,0,0.1)"}}>
-                        Create Prediction
-                    </Typography>
-
-                    <Divider sx={{marginY: "1rem"}} />
-
-                    <TextField fullWidth sx={{marginBottom: "1rem"}} />
-                    <TextField fullWidth sx={{marginBottom: "1rem"}} />
-                    <TextField fullWidth sx={{marginBottom: "1rem"}} />
-                    <TextField fullWidth sx={{marginBottom: "1rem"}} />
-                </Box>
-            </Container>
-        </Box>
     )
 }
 
