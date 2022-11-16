@@ -1,8 +1,9 @@
-import { AppBar, Button, Divider, Grid, Paper, SvgIcon, TextField, Toolbar, Typography } from '@mui/material';
+import { AppBar, Button, Divider, Grid, Paper, SvgIcon, tableBodyClasses, TextField, Toolbar, Typography } from '@mui/material';
 import { Box, Container } from '@mui/system';
 import { ReactComponent as FlameIcon } from "./flame-icon.svg"
 import { useTheme } from '@emotion/react';
-import { GoogleMap } from '@react-google-maps/api';
+import { GoogleMap, HeatmapLayer } from '@react-google-maps/api';
+import { useEffect, useState } from 'react';
 
 function App() {
     
@@ -44,14 +45,55 @@ const TopBar = () => {
     )
 }
 
+const randomInt = (min, max) => {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+const negRand = () => {
+    return Math.random() - 0.5
+}
+
 const California = () => {
+    const [data, setData] = useState([]);
+
+    const groupOffset = {lat: 3.5, lng: 3.5}
+    const pointOffset = {lat: 0.1, lng: 0.1}
+    useEffect(() => {
+        let tmpData = []
+        // Generate 100 groups of datapoints
+        for (let i = 0; i < 100; i++) {
+            // Generate center of this group
+            let center = {
+                lat: 36.778259 + groupOffset.lat*negRand(), 
+                lng: -119.417931 + groupOffset.lng*negRand()
+            }
+
+            // 5 to 20 data points in each group
+            let r = randomInt(5, 20)
+            for (let j = 0; j < r; j++) {
+                tmpData.push(new window.google.maps.LatLng(
+                    center.lat + pointOffset.lat*negRand(), 
+                    center.lng + pointOffset.lng*negRand()
+                ))
+            }
+        }
+
+        setData(tmpData)
+    }, [])
+
+    console.log(data)
+
     return (
         <GoogleMap 
             mapContainerStyle={{width: "100%", height: "40rem"}}
             center={{lat: 36.778259, lng: -119.417931}}
             zoom={6}
         >  
-            <></>
+            <HeatmapLayer 
+                data={data}
+            />
         </GoogleMap>
     )
 }
