@@ -14,11 +14,11 @@ function App() {
 
             <Box sx={{margin: "2rem"}}>
                 <Grid container spacing={2}>
-                    <Grid item md={12} lg={4}>
+                    <Grid item xs={12} lg={4}>
                         <California />
                     </Grid>
 
-                    <Grid item md={12} lg={3}>
+                    <Grid item xs={12} lg={3}>
                         <PredictionInput />
                         <PredictionResults />
                     </Grid>
