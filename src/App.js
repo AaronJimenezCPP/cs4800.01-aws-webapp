@@ -13,12 +13,12 @@ function App() {
             <TopBar />
 
             <Box sx={{margin: "2rem"}}>
-                <Grid container>
-                    <Grid item lg={4}>
+                <Grid container spacing={2}>
+                    <Grid item md={12} lg={4}>
                         <California />
                     </Grid>
 
-                    <Grid item lg={3}>
+                    <Grid item md={12} lg={3}>
                         <PredictionInput />
                     </Grid>
                 </Grid>
