@@ -4,7 +4,6 @@ import { ReactComponent as FlameIcon } from "./flame-icon.svg"
 import { useTheme } from '@emotion/react';
 import { GoogleMap, HeatmapLayer } from '@react-google-maps/api';
 import { useEffect, useState } from 'react';
-import { Dayjs } from 'dayjs';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 
@@ -22,11 +21,15 @@ function App() {
                     </Grid>
 
                     <Grid item xs={12} lg={4}>
-                        <PredictionInput />                      
+                        <PredictionInput />  
+
+                        <Box sx={{marginTop: "1rem"}}>
+                            <PredictionResults />   
+                        </Box>           
                     </Grid>
 
                     <Grid item xs={12} lg={4}>
-                        <PredictionResults />
+                        
                     </Grid>
                 </Grid>
             </Box>
@@ -109,24 +112,6 @@ const California = () => {
 const PredictionInput = () => {
     const theme = useTheme();
     const [date, setDate] = useState(null);
-
-    const inputStyles = {
-        '& label.Mui-focused': {
-            color: 'rgba(0,0,0,0.5)',
-        },
-        
-        '& .MuiOutlinedInput-root': {
-            '& fieldset': {
-              borderColor: 'rgba(0,0,0,0.5)',
-            },
-            '&:hover fieldset': {
-              borderColor: 'rgba(0,0,0,0.5)',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: 'rgba(0,0,0,0.5)',
-            },
-        }
-    }
 
     return (
             <Paper elevation={4} sx={{width: "100%", overflow: "hidden"}}>
@@ -218,15 +203,68 @@ const PredictionResults = () => {
 
     useEffect(() => {
         let tmpData = []
-        for (let i = 1; i <= 58; i++) {
+        for (let i = 1; i <= 20; i++) {
             tmpData.push({
-                name: "County" + i,
+                name: "Location " + i,
                 risk: riskNames[Math.floor(Math.random()*riskNames.length)]
             })
         }
 
         setData(tmpData)
     }, [])
+
+    // For setting up sticky header properly
+    const titleLineHeight = "1.2rem"
+    const titleMarginY = "0.4rem"
+    const cellPadding = "0.375rem"
+    const titleBorderWidth = "2px"
+
+    return (
+        <Paper elevation={4} sx={{overflow: "hidden"}}>
+            <TableContainer sx={{maxHeight: "40rem"}}>
+                <Table size="small" stickyHeader>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell colSpan={2} sx={{borderColor: "rgba(0,0,0,0.3)", borderWidth: titleBorderWidth}}>
+                                <Typography sx={{marginY: titleMarginY, color: "rgb(60,60,60)", fontSize: "1.4rem", lineHeight: titleLineHeight, fontWeight: 600, textShadow: "2px 2px 2px rgba(40,40,40,0.2)"}}>
+                                    Prediction Results
+                                </Typography>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell sx={{top: `calc(${titleLineHeight} + 2*${titleMarginY} + 2*${cellPadding} + ${titleBorderWidth})`, borderColor: "rgba(0,0,0,0.3)", borderWidth: "2px"}}>
+                                <Typography sx={{fontSize: "1rem", fontWeight: 600, color: "rgb(60,60,60)", textShadow: "2px 2px 2px rgba(40,40,40,0.2)"}}>
+                                    Location
+                                </Typography>
+                            </TableCell>
+                            <TableCell sx={{top: `calc(${titleLineHeight} + 2*${titleMarginY} + 2*${cellPadding} + ${titleBorderWidth})`, borderColor: "rgba(0,0,0,0.3)", borderWidth: "2px"}}>
+                                <Typography sx={{fontSize: "1rem", fontWeight: 600, color: "rgb(60,60,60)", textShadow: "2px 2px 2px rgba(40,40,40,0.2)"}}>
+                                    Risk Level
+                                </Typography>
+                            </TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {data.map((thisData, i) => (
+                            <TableRow key={thisData.name}>
+                                <TableCell>
+                                    <Typography>
+                                        {thisData.name}
+                                    </Typography>
+                                </TableCell>
+                                <TableCell>
+                                    <Typography>
+                                        {thisData.risk}
+                                    </Typography>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Paper>
+        
+    )
 
     return (
     
