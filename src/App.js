@@ -262,61 +262,7 @@ const PredictionResults = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
-        </Paper>
-        
-    )
-
-    return (
-    
-            <Box
-                sx={{
-                    width: "100%",
-                    maxHeight: "40rem",
-                    overflow: "auto",
-                    borderRadius: "0.5rem",
-                    borderStyle: "solid",
-                    borderWidth: "1px",
-                    boxShadow: theme.shadows[4],
-                    borderColor: theme.palette.primary.main
-                }}
-            >
-                <Typography textAlign="center" sx={{fontSize: "1.4rem", marginY: "0.4rem", color: theme.palette.primary.dark, textShadow: "2px 2px rgba(0,0,0,0.1)"}}>
-                    Prediction results
-                </Typography>
-
-                <Container>
-                    <Divider sx={{borderColor: theme.palette.primary.main}} />
-
-                    <Grid container justifyContent="space-between" sx={{marginY: "0.4rem"}}>
-                        <Typography sx={{fontWeight: 600, textShadow: "2px 2px rgba(0,0,0,0.1)"}}>
-                            County Name
-                        </Typography>
-                        <Typography sx={{fontWeight: 600, textShadow: "2px 2px rgba(0,0,0,0.1)"}}>
-                            Risk Level
-                        </Typography>
-                    </Grid>
-
-                    <Divider sx={{borderColor: theme.palette.primary.main}} />
-
-                    {data.map((thisData, i) => (
-                        <>
-                            <Grid container justifyContent="space-between" sx={{marginY: "0.2rem"}}>
-                                <Typography>
-                                    {thisData.name}
-                                </Typography>
-                                <Typography>
-                                    {thisData.risk}
-                                </Typography>
-                            </Grid>
-
-                            <Divider />
-                        </> 
-                    ))}
-                </Container>
-                
-            </Box>
-    
-        
+        </Paper> 
     )
 }
 
