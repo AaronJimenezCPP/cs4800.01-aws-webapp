@@ -15,12 +15,12 @@ function App() {
             <TopBar />
 
             <Box sx={{margin: "2rem"}}>
-                <Grid container spacing={2}>
-                    <Grid item xs={12} lg={4}>
+                <Grid container spacing={4}>
+                    <Grid item xs={12} lg={5}>
                         <California />
                     </Grid>
 
-                    <Grid item xs={12} lg={4}>
+                    <Grid item xs={12} lg={3}>
                         <PredictionInput />  
 
                         <Box sx={{marginTop: "1rem"}}>
@@ -29,7 +29,7 @@ function App() {
                     </Grid>
 
                     <Grid item xs={12} lg={4}>
-                        
+                        <About />
                     </Grid>
                 </Grid>
             </Box>
@@ -97,7 +97,7 @@ const California = () => {
     return (
         <Box sx={{boxShadow: theme.shadows[8]}}>
             <GoogleMap 
-                mapContainerStyle={{width: "100%", height: "40rem"}}
+                mapContainerStyle={{width: "100%", height: "50rem"}}
                 center={{lat: 36.778259, lng: -119.417931}}
                 zoom={6}
             >  
@@ -188,7 +188,6 @@ const PredictionInput = () => {
 
 const PredictionResults = () => {
     const [data, setData] = useState([])
-    const theme = useTheme()
 
     const riskNames = [
         "None",
@@ -266,22 +265,53 @@ const PredictionResults = () => {
     )
 }
 
-const History = () => {
-    return (
-        <TableContainer>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Name</TableCell>
-                        <TableCell>Fires/Year</TableCell>
-                        <TableCell>Fires/Year</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
+const About = () => {
+    const theme = useTheme()
 
-                </TableBody>
-            </Table>
-        </TableContainer>
+    return (
+        <>
+            <Typography sx={{marginBottom: "1rem", color: "rgb(60,60,60)", fontSize: "1.4rem", lineHeight: "1.2rem", fontWeight: 600, textShadow: "2px 2px 2px rgba(40,40,40,0.2)"}}>
+                About
+            </Typography>
+
+            <Divider sx={{marginY: "1rem"}} />
+
+            <Typography sx={{fontSize: "1rem", lineHeight: "1.2rem"}}>
+                This tool can help predict the areas in California that have the highest risk of developing wildfires. Predictions are created for specific dates and recent rainfall conditions.
+            </Typography>
+
+            <Typography sx={{marginTop: "1rem", fontSize: "1rem", lineHeight: "1.2rem"}}>
+                It uses an AI model trained on historical weather and wildfire data.
+            </Typography>
+
+            <Divider sx={{marginY: "1rem"}} />
+
+            <Typography sx={{fontSize: "1rem", lineHeight: "1.2rem"}}>
+                Wildfires are a devastating problem that plague the state of california, and they continue to get worse every decade.
+            </Typography>
+
+            <Box
+                component="img"
+                src="https://eoimages.gsfc.nasa.gov/images/imagerecords/148000/148908/californiafires_map_1970-2021.png"
+                sx={{width: "100%", marginTop: "1rem", boxShadow: theme.shadows[4]}}
+            />
+            <Typography sx={{fontSize: "0.6rem", fontHeight: "0.6rem", color: "rgba(0,0,0,0.6)"}}>
+                earthobservatory.nasa.gov
+            </Typography>
+
+            <Typography sx={{marginTop: "1rem", fontSize: "1rem", lineHeight: "1.2rem"}}>
+                This is largely due to historical levels of drought.
+            </Typography>
+
+            <Box
+                component="img"
+                src="https://eoimages.gsfc.nasa.gov/images/imagerecords/148000/148908/cadrought_usdm_2021271.png"
+                sx={{width: "100%", marginTop: "1rem", boxShadow: theme.shadows[4]}}
+            />
+            <Typography sx={{fontSize: "0.6rem", fontHeight: "0.6rem", color: "rgba(0,0,0,0.6)"}}>
+                earthobservatory.nasa.gov
+            </Typography>
+        </>
     )
 }
 
