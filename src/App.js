@@ -131,31 +131,34 @@ const PredictionInput = () => {
                         />
                     </LocalizationProvider>
 
-                    <Grid container spacing={2} sx={{marginBottom: "0.8rem"}}>
-                        <Grid item xs={8}>
-                            <TextField 
-                                fullWidth
-                                label="Rainfall"
-                                type="number"
-                                InputProps={{
-                                    endAdornment: <InputAdornment position="end">in</InputAdornment>,
-                                }}
-                            />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <FormControl fullWidth>
-                                <InputLabel id="timespan-select-label">Timespan</InputLabel>
-                                <Select
-                                    labelId="timespan-select-label"
-                                    label="Timespan"
-                                >
-                                    <MenuItem value={1}>1 month</MenuItem>
-                                    <MenuItem value={2}>2 months</MenuItem>
-                                    <MenuItem value={3}>3 months</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                    </Grid>
+                    <TextField 
+                        sx={{marginBottom: "0.8rem"}}
+                        fullWidth
+                        label="Rainfall 30d"
+                        type="number"
+                        InputProps={{
+                            endAdornment: <InputAdornment position="end">in</InputAdornment>,
+                        }}
+                    />
+            
+                    <TextField 
+                        sx={{marginBottom: "0.8rem"}}
+                        fullWidth
+                        label="Rainfall 60d"
+                        type="number"
+                        InputProps={{
+                            endAdornment: <InputAdornment position="end">in</InputAdornment>,
+                        }}
+                    />
+                
+                    <TextField 
+                        fullWidth
+                        label="Rainfall 90d"
+                        type="number"
+                        InputProps={{
+                            endAdornment: <InputAdornment position="end">in</InputAdornment>,
+                        }}
+                    />           
 
                     <Divider sx={{marginY: "0.8rem"}} />
 
