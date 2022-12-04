@@ -1,4 +1,4 @@
-import { AppBar, Button, Divider, Grid, InputAdornment, Paper, SvgIcon, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Toolbar, Typography } from '@mui/material';
+import { AppBar, Button, CircularProgress, Divider, Grid, InputAdornment, Paper, SvgIcon, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Toolbar, Typography } from '@mui/material';
 import { Box, Container } from '@mui/system';
 import { ReactComponent as FlameIcon } from "./flame-icon.svg"
 import { useTheme } from '@emotion/react';
@@ -12,7 +12,7 @@ import { observer } from 'mobx-react-lite';
 
 function App() {
     useEffect(() => {
-        
+        _Store.loadLocations()
     }, [])
 
     return (
@@ -48,8 +48,35 @@ const _Store = new class {
     rain60d = ""
     rain90d = ""
 
+    loadingPrediction = false
+    unfilledError = false
+
+    prediction = []
+    locations = {}
+
     constructor() {
         makeAutoObservable(this)
+    }
+
+    loadLocations = async () => {
+        try {
+            let result = await apiAgent.fireData.allLocations()
+            if (result) {
+                this.locations = result.reduce((transform, thisRecord) => {
+                    transform[thisRecord[0]] = {
+                        id: thisRecord[0],
+                        lat: thisRecord[1],
+                        lng: thisRecord[2],
+                        name: thisRecord[3]
+                    }
+    
+                    return transform
+                }, {})
+            }
+        }
+        catch (e) {
+            console.log(e)
+        }  
     }
 
     updateDate = (newDate) => {
@@ -69,14 +96,35 @@ const _Store = new class {
     }
 
     predict = async () => {
-        if (this.rain30d && this.rain60d && this.rain90d && this.date.isValid) {
-            // let testResult = await apiAgent.testing.testEndpoint()
-            let result = await apiAgent.fireData.predict(this.date.format("MM/DD/YYYY"), this.rain30d, this.rain60d, this.rain90d);
-            console.log(result)
+        this.unfilledError = false
+        this.loadingPrediction = true
+        if (this.rain30d && this.rain60d && this.rain90d && this.date && this.date.isValid()) {
+            try {
+                let result = await apiAgent.fireData.predict(this.date.format("MM/DD/YYYY"), this.rain30d, this.rain60d, this.rain90d);
+                if (result) {
+                    this.prediction = result.reduce((transform, thisRecord) => {
+                        transform.push({
+                            location: this.locations[thisRecord[0]],
+                            risk: thisRecord[1]
+                        })
+
+                        return transform;
+                    }, []).sort((a, b) => {
+                        return a.location.name.localeCompare(b.location.name)
+                    })
+
+                    console.log(this.prediction)
+                }
+            }
+            catch (e) {
+                console.log(e)
+            }
         }
         else {
-            console.log("Some fields empty")
+            this.unfilledError = true
         }
+
+        this.loadingPrediction = false
     }
 }()
 
@@ -98,44 +146,8 @@ const TopBar = () => {
     )
 }
 
-const randomInt = (min, max) => {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-const negRand = () => {
-    return Math.random() - 0.5
-}
-
-const California = () => {
+const California = observer(() => {
     const theme = useTheme();
-    const [data, setData] = useState([]);
-
-    const groupOffset = {lat: 3.5, lng: 3.5}
-    const pointOffset = {lat: 0.1, lng: 0.1}
-    useEffect(() => {
-        let tmpData = []
-        // Generate 100 groups of datapoints
-        for (let i = 0; i < 100; i++) {
-            // Generate center of this group
-            let center = {
-                lat: 36.778259 + groupOffset.lat*negRand(), 
-                lng: -119.417931 + groupOffset.lng*negRand()
-            }
-
-            // 5 to 20 data points in each group
-            let r = randomInt(5, 20)
-            for (let j = 0; j < r; j++) {
-                tmpData.push(new window.google.maps.LatLng(
-                    center.lat + pointOffset.lat*negRand(), 
-                    center.lng + pointOffset.lng*negRand()
-                ))
-            }
-        }
-
-        setData(tmpData)
-    }, [])
 
     return (
         <Box sx={{boxShadow: theme.shadows[8]}}>
@@ -145,12 +157,21 @@ const California = () => {
                 zoom={6}
             >  
                 <HeatmapLayer 
-                    data={data}
+                    data={_Store.prediction.map((thisRecord) => {
+                        return {
+                            weight: thisRecord.risk ** 2,
+                            location: new window.google.maps.LatLng(
+                                thisRecord.location.lat, 
+                                thisRecord.location.lng
+                            )
+                        }
+                    })}
+                    options={{radius: 15}}
                 />
             </GoogleMap>
         </Box>
     )
-}
+})
 
 const PredictionInput = observer(() => {
     const theme = useTheme();
@@ -169,7 +190,8 @@ const PredictionInput = observer(() => {
                             label="Date"
                             value={_Store.date}
                             onChange={(newValue) => _Store.updateDate(newValue)}
-                            renderInput={(params) => <TextField fullWidth {...params} sx={{marginBottom: "0.8rem"}} />}
+                            
+                            renderInput={(params) => <TextField fullWidth {...params} sx={{marginBottom: "0.8rem"}} error={_Store.unfilledError && (!_Store.date || !_Store.date.isValid())} />}
                         />
                     </LocalizationProvider>
 
@@ -180,6 +202,7 @@ const PredictionInput = observer(() => {
                         type="number"
                         value={_Store.rain30d}
                         onChange={(e) => _Store.updateRain30d(e.target.value)}
+                        error={_Store.unfilledError && !_Store.rain30d}
                         InputProps={{
                             endAdornment: <InputAdornment position="end">in</InputAdornment>,
                         }}
@@ -192,6 +215,7 @@ const PredictionInput = observer(() => {
                         type="number"
                         value={_Store.rain60d}
                         onChange={(e) => _Store.updateRain60d(e.target.value)}
+                        error={_Store.unfilledError && !_Store.rain60d}
                         InputProps={{
                             endAdornment: <InputAdornment position="end">in</InputAdornment>,
                         }}
@@ -203,66 +227,71 @@ const PredictionInput = observer(() => {
                         type="number"
                         value={_Store.rain90d}
                         onChange={(e) => _Store.updateRain90d(e.target.value)}
+                        error={_Store.unfilledError && !_Store.rain90d}
                         InputProps={{
                             endAdornment: <InputAdornment position="end">in</InputAdornment>,
                         }}
-                    />           
+                    />   
+
+                    {_Store.unfilledError && !(_Store.rain30d && _Store.rain60d && _Store.rain90d && _Store.date && _Store.date.isValid()) && (
+                        <Typography sx={{color: "rgb(200, 20, 20)", fontSize: "0.8rem", marginBottom: "-0.8rem", marginTop: "0.8rem", textShadow: "1px 1px 1px rgba(0,0,0,0.3)"}}>
+                            Fill in all fields to make a prediction    
+                        </Typography> 
+                    )}       
 
                     <Divider sx={{marginY: "0.8rem"}} />
 
-                    <Button 
-                        onClick={_Store.predict}
-                        variant='contained' 
-                        sx={{
-                            textTransform: "none",
-                            borderRadius: "12px",
-                            boxShadow: theme.shadows[4],
-                            marginBottom: "1rem"
-                        }}
-                    >
-                        <Container>
-                            <Grid container sx={{marginRight: "0.4rem"}}>
-                                <SvgIcon sx={{width: "1.6rem", height: "1.6rem", marginRight: "0.4rem"}}>
-                                    <FlameIcon />
-                                </SvgIcon>
+                    <Grid container>
+                        <Button 
+                            onClick={_Store.predict}
+                            variant='contained' 
+                            sx={{
+                                textTransform: "none",
+                                borderRadius: "12px",
+                                boxShadow: theme.shadows[4],
+                                marginBottom: "1rem"
+                            }}
+                        >
+                            <Container>
+                                <Grid container sx={{marginRight: "0.4rem"}}>
+                                    <SvgIcon sx={{width: "1.6rem", height: "1.6rem", marginRight: "0.4rem"}}>
+                                        <FlameIcon />
+                                    </SvgIcon>
 
-                                <Typography sx={{lineHeight: "1.6rem", fontSize: "1.4rem", color: "white", fontWeight: 600, textShadow: "2px 2px 2px rgba(0,0,0,0.4)"}}>
-                                    Predict
-                                </Typography>
-                            </Grid>
-                        </Container>
-                    </Button>
+                                    <Typography sx={{lineHeight: "1.6rem", fontSize: "1.4rem", color: "white", fontWeight: 600, textShadow: "2px 2px 2px rgba(0,0,0,0.4)"}}>
+                                        Predict
+                                    </Typography>
+                                </Grid>
+                            </Container>
+                        </Button>
+
+                        {_Store.loadingPrediction && (<CircularProgress sx={{marginLeft: "1rem"}} />)}
+                    </Grid>
                 </Box>
             </Paper>
       
     )
 })
 
-const PredictionResults = () => {
-    const [data, setData] = useState([])
-
+const PredictionResults = observer(() => {
     const riskNames = [
-        "None",
-        "Very Low",
-        "Low",
-        "Mild",
-        "Moderate",
-        "High",
-        "Very High",
-        "Severe"
+        {name: "None", cutoff: 0.05},
+        {name: "Very Low", cutoff: 0.15},
+        {name: "Low", cutoff: 0.30},
+        {name: "Mild", cutoff: 0.45},
+        {name: "Moderate", cutoff: 0.6},
+        {name: "High", cutoff: 0.75},
+        {name: "Very High", cutoff: 0.9},
+        {name: "Severe", cutoff: 1}
     ]
 
-    useEffect(() => {
-        let tmpData = []
-        for (let i = 1; i <= 20; i++) {
-            tmpData.push({
-                name: "Location " + i,
-                risk: riskNames[Math.floor(Math.random()*riskNames.length)]
-            })
+    const riskToString = (risk) => {
+        for (let i = 0; i < riskNames.length; i++) {
+            if (risk <= riskNames[i].cutoff) return riskNames[i].name;
         }
 
-        setData(tmpData)
-    }, [])
+        return "N/A"
+    }
 
     // For setting up sticky header properly
     const titleLineHeight = "1.2rem"
@@ -296,16 +325,16 @@ const PredictionResults = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {data.map((thisData, i) => (
-                            <TableRow key={thisData.name}>
+                        {_Store.prediction.map((thisRecord, i) => (
+                            <TableRow key={thisRecord.location.id}>
                                 <TableCell>
                                     <Typography>
-                                        {thisData.name}
+                                        {thisRecord.location.name}
                                     </Typography>
                                 </TableCell>
                                 <TableCell>
                                     <Typography>
-                                        {thisData.risk}
+                                        {riskToString(thisRecord.risk)}
                                     </Typography>
                                 </TableCell>
                             </TableRow>
@@ -315,7 +344,7 @@ const PredictionResults = () => {
             </TableContainer>
         </Paper> 
     )
-}
+})
 
 const About = () => {
     const theme = useTheme()

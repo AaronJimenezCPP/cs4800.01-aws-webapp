@@ -18,16 +18,6 @@ const fireData = {
     allLocations: () => core.post("get_all_locations/firedata", {location_id: "all"})
 }
 
-const testing = {
-    testEndpoint: () => core.post("default/dantest", null, {params: {
-        date: "2022-11-24",
-        rain30d: 0.15,
-        rain60d: 0.55,
-        rain90d: 1.05
-    }})
-}
-
 export const apiAgent = {
-    fireData,
-    testing
+    fireData
 }
