@@ -1,4 +1,4 @@
-import { AppBar, Button, Divider, FormControl, Grid, InputAdornment, InputLabel, MenuItem, Paper, Select, SvgIcon, Table, TableBody, tableBodyClasses, TableCell, TableContainer, TableHead, TableRow, TextField, Toolbar, Typography } from '@mui/material';
+import { AppBar, Button, Divider, Grid, InputAdornment, Paper, SvgIcon, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Toolbar, Typography } from '@mui/material';
 import { Box, Container } from '@mui/system';
 import { ReactComponent as FlameIcon } from "./flame-icon.svg"
 import { useTheme } from '@emotion/react';
@@ -6,9 +6,14 @@ import { GoogleMap, HeatmapLayer } from '@react-google-maps/api';
 import { useEffect, useState } from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { apiAgent } from './api';
+import { makeAutoObservable } from 'mobx';
+import { observer } from 'mobx-react-lite';
 
 function App() {
-    
+    useEffect(() => {
+        
+    }, [])
 
     return (
         <>
@@ -36,6 +41,44 @@ function App() {
         </>
     );
 }
+
+const _Store = new class {
+    date = null
+    rain30d = ""
+    rain60d = ""
+    rain90d = ""
+
+    constructor() {
+        makeAutoObservable(this)
+    }
+
+    updateDate = (newDate) => {
+        this.date = newDate
+    }   
+
+    updateRain30d = (newRain30d) => {
+        this.rain30d = newRain30d
+    }
+
+    updateRain60d = (newRain60d) => {
+        this.rain60d = newRain60d
+    }
+
+    updateRain90d = (newRain90d) => {
+        this.rain90d = newRain90d
+    }
+
+    predict = async () => {
+        if (this.rain30d && this.rain60d && this.rain90d && this.date.isValid) {
+            // let testResult = await apiAgent.testing.testEndpoint()
+            let result = await apiAgent.fireData.predict(this.date.format("MM/DD/YYYY"), this.rain30d, this.rain60d, this.rain90d);
+            console.log(result)
+        }
+        else {
+            console.log("Some fields empty")
+        }
+    }
+}()
 
 const TopBar = () => {
     return (
@@ -109,9 +152,8 @@ const California = () => {
     )
 }
 
-const PredictionInput = () => {
+const PredictionInput = observer(() => {
     const theme = useTheme();
-    const [date, setDate] = useState(null);
 
     return (
             <Paper elevation={4} sx={{width: "100%", overflow: "hidden"}}>
@@ -125,8 +167,8 @@ const PredictionInput = () => {
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DatePicker
                             label="Date"
-                            value={date}
-                            onChange={(newValue) => setDate(newValue)}
+                            value={_Store.date}
+                            onChange={(newValue) => _Store.updateDate(newValue)}
                             renderInput={(params) => <TextField fullWidth {...params} sx={{marginBottom: "0.8rem"}} />}
                         />
                     </LocalizationProvider>
@@ -136,6 +178,8 @@ const PredictionInput = () => {
                         fullWidth
                         label="Rainfall 30d"
                         type="number"
+                        value={_Store.rain30d}
+                        onChange={(e) => _Store.updateRain30d(e.target.value)}
                         InputProps={{
                             endAdornment: <InputAdornment position="end">in</InputAdornment>,
                         }}
@@ -146,6 +190,8 @@ const PredictionInput = () => {
                         fullWidth
                         label="Rainfall 60d"
                         type="number"
+                        value={_Store.rain60d}
+                        onChange={(e) => _Store.updateRain60d(e.target.value)}
                         InputProps={{
                             endAdornment: <InputAdornment position="end">in</InputAdornment>,
                         }}
@@ -155,6 +201,8 @@ const PredictionInput = () => {
                         fullWidth
                         label="Rainfall 90d"
                         type="number"
+                        value={_Store.rain90d}
+                        onChange={(e) => _Store.updateRain90d(e.target.value)}
                         InputProps={{
                             endAdornment: <InputAdornment position="end">in</InputAdornment>,
                         }}
@@ -163,6 +211,7 @@ const PredictionInput = () => {
                     <Divider sx={{marginY: "0.8rem"}} />
 
                     <Button 
+                        onClick={_Store.predict}
                         variant='contained' 
                         sx={{
                             textTransform: "none",
@@ -187,7 +236,7 @@ const PredictionInput = () => {
             </Paper>
       
     )
-}
+})
 
 const PredictionResults = () => {
     const [data, setData] = useState([])
@@ -280,7 +329,7 @@ const About = () => {
             <Divider sx={{marginY: "1rem"}} />
 
             <Typography sx={{fontSize: "1rem", lineHeight: "1.2rem"}}>
-                This tool can help predict the areas in California that have the highest risk of developing wildfires. Predictions are created for specific dates and recent rainfall conditions.
+                This tool can help predict the areas in California that have the highest risk of developing wildfires. Predictions are created for specific dates and thier recent rainfall conditions.
             </Typography>
 
             <Typography sx={{marginTop: "1rem", fontSize: "1rem", lineHeight: "1.2rem"}}>
