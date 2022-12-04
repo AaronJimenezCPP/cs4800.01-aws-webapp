@@ -3,15 +3,17 @@ import { Box, Container } from '@mui/system';
 import { ReactComponent as FlameIcon } from "./flame-icon.svg"
 import { useTheme } from '@emotion/react';
 import { GoogleMap, HeatmapLayer } from '@react-google-maps/api';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { apiAgent } from './api';
 import { makeAutoObservable } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
+// Top level layout of application
 function App() {
     useEffect(() => {
+        // Load locations from api on page load
         _Store.loadLocations()
     }, [])
 
@@ -42,15 +44,19 @@ function App() {
     );
 }
 
+// State management with MobX
 const _Store = new class {
+    // Input state
     date = null
     rain30d = ""
     rain60d = ""
     rain90d = ""
 
+    // UI state
     loadingPrediction = false
     unfilledError = false
 
+    // Data from api
     prediction = []
     locations = {}
 
@@ -58,10 +64,12 @@ const _Store = new class {
         makeAutoObservable(this)
     }
 
+    // Load location from api
     loadLocations = async () => {
         try {
             let result = await apiAgent.fireData.allLocations()
             if (result) {
+                // Transform from array into objects, with location id as key
                 this.locations = result.reduce((transform, thisRecord) => {
                     transform[thisRecord[0]] = {
                         id: thisRecord[0],
@@ -79,29 +87,18 @@ const _Store = new class {
         }  
     }
 
-    updateDate = (newDate) => {
-        this.date = newDate
-    }   
-
-    updateRain30d = (newRain30d) => {
-        this.rain30d = newRain30d
-    }
-
-    updateRain60d = (newRain60d) => {
-        this.rain60d = newRain60d
-    }
-
-    updateRain90d = (newRain90d) => {
-        this.rain90d = newRain90d
-    }
-
+    // Make a prediction request
     predict = async () => {
-        this.unfilledError = false
-        this.loadingPrediction = true
+        this.unfilledError = false // Clear unfilled input error
+        this.loadingPrediction = true // Start loading spinner for instant feedback
+
+        // Only make request if all input fields are filled and valid
         if (this.rain30d && this.rain60d && this.rain90d && this.date && this.date.isValid()) {
             try {
                 let result = await apiAgent.fireData.predict(this.date.format("MM/DD/YYYY"), this.rain30d, this.rain60d, this.rain90d);
                 if (result) {
+                    // Transform into an array of objects
+                    // Each includes 0-1 risk level and the location object
                     this.prediction = result.reduce((transform, thisRecord) => {
                         transform.push({
                             location: this.locations[thisRecord[0]],
@@ -110,10 +107,9 @@ const _Store = new class {
 
                         return transform;
                     }, []).sort((a, b) => {
+                        // Sort by name alphabetically
                         return a.location.name.localeCompare(b.location.name)
                     })
-
-                    console.log(this.prediction)
                 }
             }
             catch (e) {
@@ -121,13 +117,23 @@ const _Store = new class {
             }
         }
         else {
+            // If any input fields are not filled or invalid
+            // Will display error message and outline invalid fields in red
             this.unfilledError = true
         }
 
+        // Stop loading spinner
         this.loadingPrediction = false
     }
+
+    // Update state of input fields
+    updateDate = (newDate) => { this.date = newDate }   
+    updateRain30d = (newRain30d) => { this.rain30d = newRain30d }
+    updateRain60d = (newRain60d) => { this.rain60d = newRain60d }
+    updateRain90d = (newRain90d) => { this.rain90d = newRain90d }
 }()
 
+// Green topbar
 const TopBar = () => {
     return (
         <AppBar position='sticky'>
@@ -146,6 +152,8 @@ const TopBar = () => {
     )
 }
 
+// Google maps api of california using @react-google-maps/api npm package
+// docs at https://react-google-maps-api-docs.netlify.app/
 const California = observer(() => {
     const theme = useTheme();
 
@@ -173,6 +181,7 @@ const California = observer(() => {
     )
 })
 
+// The input fields section
 const PredictionInput = observer(() => {
     const theme = useTheme();
 
@@ -190,7 +199,6 @@ const PredictionInput = observer(() => {
                             label="Date"
                             value={_Store.date}
                             onChange={(newValue) => _Store.updateDate(newValue)}
-                            
                             renderInput={(params) => <TextField fullWidth {...params} sx={{marginBottom: "0.8rem"}} error={_Store.unfilledError && (!_Store.date || !_Store.date.isValid())} />}
                         />
                     </LocalizationProvider>
@@ -273,7 +281,10 @@ const PredictionInput = observer(() => {
     )
 })
 
+// The readable Prediction Results section
 const PredictionResults = observer(() => {
+    // For translation from 0-1 risk level to human readable string
+    // Will take name if <= cutoff
     const riskNames = [
         {name: "None", cutoff: 0.05},
         {name: "Very Low", cutoff: 0.15},
@@ -285,6 +296,7 @@ const PredictionResults = observer(() => {
         {name: "Severe", cutoff: 1}
     ]
 
+    // Function for converting risk to names from above
     const riskToString = (risk) => {
         for (let i = 0; i < riskNames.length; i++) {
             if (risk <= riskNames[i].cutoff) return riskNames[i].name;
@@ -346,6 +358,7 @@ const PredictionResults = observer(() => {
     )
 })
 
+// Information section
 const About = () => {
     const theme = useTheme()
 
