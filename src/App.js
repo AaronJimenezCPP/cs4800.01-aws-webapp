@@ -9,6 +9,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { apiAgent } from './api';
 import { makeAutoObservable } from 'mobx';
 import { observer } from 'mobx-react-lite';
+import moment from 'moment/moment';
 
 // Top level layout of application
 function App() {
@@ -94,26 +95,29 @@ const _Store = new class {
 
         // Only make request if all input fields are filled and valid
         if (this.rain30d && this.rain60d && this.rain90d && this.date && this.date.isValid()) {
-            try {
-                let result = await apiAgent.fireData.predict(this.date.format("MM/DD/YYYY"), this.rain30d, this.rain60d, this.rain90d);
-                if (result) {
-                    // Transform into an array of objects
-                    // Each includes 0-1 risk level and the location object
-                    this.prediction = result.reduce((transform, thisRecord) => {
-                        transform.push({
-                            location: this.locations[thisRecord[0]],
-                            risk: thisRecord[1]
+            // Put 'if (!this.dateIsPast)' inside as not to trigger 'this.unfilledError = true' on false
+            if (!this.dateIsPast) {
+                try {
+                    let result = await apiAgent.fireData.predict(this.date.format("MM/DD/YYYY"), this.rain30d, this.rain60d, this.rain90d);
+                    if (result) {
+                        // Transform into an array of objects
+                        // Each includes 0-1 risk level and the location object
+                        this.prediction = result.reduce((transform, thisRecord) => {
+                            transform.push({
+                                location: this.locations[thisRecord[0]],
+                                risk: thisRecord[1]
+                            })
+    
+                            return transform;
+                        }, []).sort((a, b) => {
+                            // Sort by name alphabetically
+                            return a.location.name.localeCompare(b.location.name)
                         })
-
-                        return transform;
-                    }, []).sort((a, b) => {
-                        // Sort by name alphabetically
-                        return a.location.name.localeCompare(b.location.name)
-                    })
+                    }
                 }
-            }
-            catch (e) {
-                console.log(e)
+                catch (e) {
+                    console.log(e)
+                }
             }
         }
         else {
@@ -124,6 +128,10 @@ const _Store = new class {
 
         // Stop loading spinner
         this.loadingPrediction = false
+    }
+
+    get dateIsPast() {
+        return this.date && this.date.isValid() && this.date.isBefore(moment())
     }
 
     // Update state of input fields
@@ -167,7 +175,7 @@ const California = observer(() => {
                 <HeatmapLayer 
                     data={_Store.prediction.map((thisRecord) => {
                         return {
-                            weight: thisRecord.risk ** 2,
+                            weight: (thisRecord.risk ** 2) * 10,
                             location: new window.google.maps.LatLng(
                                 thisRecord.location.lat, 
                                 thisRecord.location.lng
@@ -199,7 +207,14 @@ const PredictionInput = observer(() => {
                             label="Date"
                             value={_Store.date}
                             onChange={(newValue) => _Store.updateDate(newValue)}
-                            renderInput={(params) => <TextField fullWidth {...params} sx={{marginBottom: "0.8rem"}} error={_Store.unfilledError && (!_Store.date || !_Store.date.isValid())} />}
+                            renderInput={(params) => (
+                                <TextField 
+                                    fullWidth 
+                                    {...params} 
+                                    sx={{marginBottom: "0.8rem"}} 
+                                    error={(_Store.unfilledError && (!_Store.date || !_Store.date.isValid())) || _Store.dateIsPast} 
+                                    helperText={_Store.dateIsPast ? "Enter a future date" : null}
+                                />)}
                         />
                     </LocalizationProvider>
 

@@ -8,7 +8,7 @@ import { LoadScript } from '@react-google-maps/api';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-    <LoadScript googleMapsApiKey='AIzaSyDWpsgbVE8pajQuodWrrwjEqvhO3N2WLDw' libraries={["visualization"]}>
+    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY} libraries={["visualization"]}>
         <ThemeProvider theme={mainTheme}>
             <App />
         </ThemeProvider>
