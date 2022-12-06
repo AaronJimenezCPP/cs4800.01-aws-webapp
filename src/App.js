@@ -3,7 +3,7 @@ import { Box, Container } from '@mui/system';
 import { ReactComponent as FlameIcon } from "./flame-icon.svg"
 import { useTheme } from '@emotion/react';
 import { GoogleMap, HeatmapLayer } from '@react-google-maps/api';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { apiAgent } from './api';
@@ -320,6 +320,32 @@ const PredictionResults = observer(() => {
         return "N/A"
     }
 
+    // Combine identical location names in prediction
+    const combinedPrediction = useMemo(() => {
+        // Key is name, value is object with location object and array of risks
+        let combinedPrediction = _Store.prediction.reduce((transform, thisRecord) => {
+            if (transform[thisRecord.location.name]) 
+                transform[thisRecord.location.name].risks.push(thisRecord.risk)
+            else 
+                transform[thisRecord.location.name] = {
+                    location: thisRecord.location,
+                    risks: [thisRecord.risk]
+                }
+            return transform
+        }, {})
+
+        // Convert back into an array
+        combinedPrediction = Object.values(combinedPrediction)
+
+        // Combine 'risks' array into single average 'risk' value
+        combinedPrediction.forEach((thisRecord) => {
+            thisRecord.risk = thisRecord.risks.reduce((sum, v) => sum += v, 0) / thisRecord.risks.length
+            thisRecord.risks = null
+        })
+
+        return combinedPrediction
+    }, [_Store.prediction])
+
     // For setting up sticky header properly
     const titleLineHeight = "1.2rem"
     const titleMarginY = "0.4rem"
@@ -352,7 +378,7 @@ const PredictionResults = observer(() => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {_Store.prediction.map((thisRecord, i) => (
+                        {combinedPrediction.map((thisRecord, i) => (
                             <TableRow key={thisRecord.location.id}>
                                 <TableCell>
                                     <Typography>
