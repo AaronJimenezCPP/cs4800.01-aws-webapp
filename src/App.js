@@ -3,7 +3,7 @@ import { Box, Container } from '@mui/system';
 import { ReactComponent as FlameIcon } from "./flame-icon.svg"
 import { useTheme } from '@emotion/react';
 import { GoogleMap, HeatmapLayer } from '@react-google-maps/api';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { apiAgent } from './api';
@@ -130,6 +130,7 @@ const _Store = new class {
         this.loadingPrediction = false
     }
 
+    // True if date is filled and valid but is in the past
     get dateIsPast() {
         return this.date && this.date.isValid() && this.date.isBefore(moment())
     }
@@ -164,13 +165,29 @@ const TopBar = () => {
 // docs at https://react-google-maps-api-docs.netlify.app/
 const California = observer(() => {
     const theme = useTheme();
+    const [zoom, setZoom] = useState(6)
+
+    // Get zoom level and update zoom state
+    function updateZoom() {
+        setZoom(this.getZoom())
+    }
+
+    // Sizes heatmap based on zoom
+    // https://medium.com/techtrument/how-many-miles-are-in-a-pixel-a0baf4611fff
+    function getHeatMapRadius(latitudeCoordinate) {
+        var distanceInMeter = 30000; // meter distance in real world    
+        var meterPerPixel = 156543.03392 * Math.cos(36.778259 * Math.PI / 180) / Math.pow(2, zoom);
+        var radius = distanceInMeter / meterPerPixel;
+        return radius;
+    }
 
     return (
         <Box sx={{boxShadow: theme.shadows[8]}}>
             <GoogleMap 
                 mapContainerStyle={{width: "100%", height: "50rem"}}
                 center={{lat: 36.778259, lng: -119.417931}}
-                zoom={6}
+                zoom={zoom}
+                onZoomChanged={updateZoom}
             >  
                 <HeatmapLayer 
                     data={_Store.prediction.map((thisRecord) => {
@@ -182,7 +199,7 @@ const California = observer(() => {
                             )
                         }
                     })}
-                    options={{radius: 15}}
+                    options={{radius: getHeatMapRadius()}}
                 />
             </GoogleMap>
         </Box>

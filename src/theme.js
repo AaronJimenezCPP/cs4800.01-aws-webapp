@@ -1,5 +1,6 @@
 import { createTheme } from "@mui/material";
 
+// Material UI custom theming
 export const mainTheme = createTheme({
     palette: {
         primary: {
