@@ -90,6 +90,8 @@ const _Store = new class {
 
     // Make a prediction request
     predict = async () => {
+        if (this.loadingPrediction) return;
+
         this.unfilledError = false // Clear unfilled input error
         this.loadingPrediction = true // Start loading spinner for instant feedback
 
